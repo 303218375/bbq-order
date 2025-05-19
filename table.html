@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>桌台订单</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 600px; margin: auto; }
+    h2 { margin-top: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    td, th { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f0f0f0; }
+  </style>
+</head>
+<body>
+
+<h1>🍽️ 桌台点单</h1>
+<p>桌号：<span id="tableNo"></span></p>
+<p>订单号：<span id="orderId"></span></p>
+
+<table id="orderTable">
+  <thead>
+    <tr>
+      <th>菜品</th>
+      <th>数量</th>
+      <th>单价</th>
+      <th>小计</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<h2>总价：￥<span id="totalPrice">0</span></h2>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const orderId = params.get('order');
+  const table = params.get('table');
+
+  document.getElementById('tableNo').innerText = table || '--';
+  document.getElementById('orderId').innerText = orderId || '--';
+
+  const orderData = JSON.parse(localStorage.getItem(`order_${orderId}`));
+
+  if (!orderData) {
+    document.body.innerHTML = '<h2>订单不存在</h2>';
+  } else {
+    const tbody = document.querySelector('#orderTable tbody');
+    let total = 0;
+
+    orderData.items.forEach(item => {
+      const subtotal = item.price * item.quantity;
+      total += subtotal;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.name}</td>
+        <td>${item.quantity}</td>
+        <td>￥${item.price}</td>
+        <td>￥${subtotal}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.getElementById('totalPrice').innerText = total.toFixed(2);
+  }
+</script>
+
+</body>
+</html>

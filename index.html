@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>烧烤点单</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 600px; margin: auto; }
+    .dish { display: flex; justify-content: space-between; margin: 10px 0; }
+    .controls button { padding: 5px 10px; }
+  </style>
+</head>
+<body>
+
+<h1>🍢 戏火烧烤</h1>
+
+<div id="menu"></div>
+
+<div>
+  <label>桌号：</label>
+  <input type="text" id="tableInput" placeholder="如 A01">
+</div>
+
+<p>总价：￥<span id="total">0</span></p>
+<button onclick="submitOrder()">提交订单</button>
+
+<script>
+  const dishes = [
+    { id: 101, name: '鸡翅', price: 12 },
+    { id: 102, name: '牛肉串', price: 15 },
+    { id: 103, name: '烤玉米', price: 6 }
+  ];
+
+  const cart = {};
+
+  function renderMenu() {
+    const menu = document.getElementById('menu');
+    menu.innerHTML = '';
+    dishes.forEach(d => {
+      const count = cart[d.id] || 0;
+      const div = document.createElement('div');
+      div.className = 'dish';
+      div.innerHTML = `
+        <span>${d.name} - ￥${d.price}</span>
+        <div class="controls">
+          <button onclick="changeCount(${d.id}, -1)">-</button>
+          <span id="count-${d.id}">${count}</span>
+          <button onclick="changeCount(${d.id}, 1)">+</button>
+        </div>
+      `;
+      menu.appendChild(div);
+    });
+    updateTotal();
+  }
+
+  function changeCount(id, delta) {
+    cart[id] = (cart[id] || 0) + delta;
+    if (cart[id] < 0) cart[id] = 0;
+    document.getElementById(`count-${id}`).innerText = cart[id];
+    updateTotal();
+  }
+
+  function updateTotal() {
+    let total = 0;
+    for (let id in cart) {
+      const dish = dishes.find(d => d.id == id);
+      total += dish.price * cart[id];
+    }
+    document.getElementById('total').innerText = total.toFixed(2);
+  }
+
+  function submitOrder() {
+    const tableNo = document.getElementById('tableInput').value.trim();
+    if (!tableNo) return alert('请输入桌号');
+
+    const orderItems = dishes
+      .filter(d => cart[d.id])
+      .map(d => ({ name: d.name, price: d.price, quantity: cart[d.id] }));
+
+    if (orderItems.length === 0) return alert('请添加菜品');
+
+    const orderId = 'ORD' + Date.now();
+
+    const order = {
+      table: tableNo,
+      orderId,
+      items: orderItems
+    };
+
+    // 保存到 localStorage
+    localStorage.setItem(`order_${orderId}`, JSON.stringify(order));
+
+    // 跳转
+    location.href = `table.html?table=${tableNo}&order=${orderId}`;
+  }
+
+  renderMenu();
+</script>
+
+</body>
+</html>
